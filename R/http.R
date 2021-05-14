@@ -12,6 +12,7 @@ httpGetRCurl <- function( protocol,
     port <- paste(":", port, sep="")
   
   # build url
+  browser()
   url <- paste(protocol, "://", host, port, urlPath, sep="")
   if(!url.exists(url)){
     stop("***: The appID you specified dose not exist! 

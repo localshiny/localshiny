@@ -14,8 +14,9 @@ httpGetRCurl <- function( protocol,
   # build url
   url <- paste(protocol, "://", host, port, urlPath, sep="")
   if(!url.exists(url)){
-    stop("***: The appID you specified dose not exist! 
-               Fail to obtain the APP information or APP installation files")
+    #eMsg <- paste(paste("URL '", url, "' does not exist \n"), "The appID you specified dose not exist! \n Fail to obtain the APP information or APP installation files \n")
+    eMsg <- paste("URL '", url, "' does not exist \n")
+    stop(eMsg)
   }
   
   # download files

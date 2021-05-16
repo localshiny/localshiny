@@ -3,7 +3,7 @@
   options( server = "www.localshiny.org")
   options( protocol = "https")
   options( path = "/api")
-  
-  options(renv.consent = TRUE)
-  options(runShiny = "runscript.R")
+  options( lockfile ="renv.lock")
+  options( renv.consent = TRUE)
+  options( runShiny = "runscript.R")
 }

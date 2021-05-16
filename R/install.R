@@ -73,7 +73,7 @@ statusAppInstall <- function(lockfile){
 
   if(length(pkgOmits) >0){
     message("***: Start to reinstall packages omitted: \n")
-    message(pkgOmits)
+    message(paste(pkgOmits, collapse = ","))
     return(FALSE)
   }else{
     return(TRUE)

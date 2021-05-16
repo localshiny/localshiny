@@ -40,7 +40,7 @@ installAppLock <- function(zipFile){
   
   tryCatch(renv::restore(lockfile = "renv.lock", prompt = FALSE),
     error=function(e){ print(e) } )
-  
+  browser()
   ## check omitted packages and reinstall them
   statusApp <- statusAppInstall("renv.lock")
   reLoop    <- 1
@@ -56,18 +56,15 @@ installAppLock <- function(zipFile){
   
   ## report result
   if(statusApp){
-
     message("***: Done!")
-
   }else{
-
     message("***: Failed to install the application.")
   }
   
 }
 
 statusAppInstall <- function(lockfile){
-
+  browser()
   pkgInstalled <- as.data.frame(installed.packages())$Package
   pkgLockfile  <- names(jsonlite::fromJSON(lockfile)$Packages)
 
@@ -75,12 +72,9 @@ statusAppInstall <- function(lockfile){
   pkgOmits    <- pkgLockfile[!pkgLockfile %in% pkgInstalled]
 
   if(length(pkgOmits) >0){
-
-    writeLines("***: Start to reinstall packages omitted")
-    writeLines(pkgOmits)
-
+    message("***: Start to reinstall packages omitted: \n")
+    message(pkgOmits)
     return(FALSE)
-
   }else{
     return(TRUE)
   }
@@ -102,28 +96,32 @@ dirAppInstall  <- function(appPath, appID){
 
 infoAppInstall <- function(appID, client){
   
-  # get the file containing all app information
+  message("getting app infomation ...")
+  # get the file containing app information
   infoFile <-client$infoApp(appID)
   on.exit(unlink(infoFile))
 
-  ## check uplaod method
   infoList    <- jsonlite::fromJSON(infoFile)
 
+  ## check result
+  if(!infoList$result){
+    stop(paste("***:", infoList$description, sep=" "))
+  }
+  
   if(is.null(infoList$arch)||!identical(infoList$arch, "script")){
     stop("***: The application you specified is not archived as a script file!")
   }
-
+  message("Done! \n")
   infoList
 }
 
 fileAppInstall <- function(appID, client){
-  
+
+  message("getting app files ...")
   ## download app installation files.
   zipFile <-client$downloadApp(appID)
 
-  if(!file.exists(zipFile)){
-    stop("***: Failed to download app files!")
-  }
-
+  message(paste("saved as", zipFile, ".", sep=""))
+  message("Done! \n")
   zipFile
 }

@@ -40,7 +40,7 @@ installAppLock <- function(zipFile){
   
   tryCatch(renv::restore(lockfile = getOption("lockfile"), prompt = FALSE),
     error=function(e){ print(e) } )
-  browser()
+  
   ## check omitted packages and reinstall them
   statusApp <- statusAppInstall(getOption("lockfile"))
   reLoop    <- 1
@@ -64,7 +64,7 @@ installAppLock <- function(zipFile){
 }
 
 statusAppInstall <- function(lockfile){
-  browser()
+  
   pkgInstalled <- as.data.frame(installed.packages())$Package
   pkgLockfile  <- names(jsonlite::fromJSON(lockfile)$Packages)
 

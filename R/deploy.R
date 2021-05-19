@@ -48,18 +48,22 @@ deployDoc <- function(username,
   appdir <- tempfile(pattern="localshiny")
   dir.create(appdir)
   on.exit(unlink(appdir, recursive=TRUE))
-  file.copy(document, appdir) 
+  file.copy(document, appdir)  ## failed
   
   name <- if(!is.null(name)) name else gsub(".R", "", basename(document))
-  
-  deployDir(username,
+
+  tryCatch({
+    deployDir(username,
             appdir,
             version = version, 
             name = name, 
             description=description, 
             os=os,
             script = document) 
-  
+  },error = function(e, ...) {
+        stop(e)
+    })
+
 }
 
 
@@ -109,7 +113,7 @@ deployDir <- function(username,
   # upload app .tar file
   headers   <- list('Cookie'=configAuthInfo$session)
   uploadRequest  <- client$uploadApp(appInfo, appFile, headers)
-  message(paste("***: ", jsonlite::fromJSON(uploadRequest$content)$description, sep=""))
+  message(paste("***: ", uploadRequest$content$description, sep=""))
   
   invisible(uploadRequest)
   

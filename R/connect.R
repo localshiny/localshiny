@@ -70,7 +70,7 @@ POST <- function(service,
   }
 }
 
-httpPost <- function(service,
+httpPost <- function(   service,
                         path,
                         headers     = list(),
                         content     = NULL,

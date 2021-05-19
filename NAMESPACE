@@ -2,10 +2,11 @@ import(renv)
 import(RCurl)
 import(jsonlite)
 import(zip)
+import(httr)
 
 export(deployApp)
-export(loginAccount)
-export(logoutAccount)
+export(login)
+export(logout)
 export(installApp)
 export(deleteApp)
 

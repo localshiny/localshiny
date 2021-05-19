@@ -1,4 +1,4 @@
-loginAccount <- function(username, token) {
+login <- function(username, token) {
 
   if (!isStringParam(username))
     stop(stringParamErrorMessage("username"))
@@ -14,10 +14,11 @@ loginAccount <- function(username, token) {
   token     <- paste(username, token, sep="-")
   headers   <- list(token=token)
   loginResponse  <- client$authLogin(headers)
-  message(paste("***: ", jsonlite::fromJSON(loginResponse$content)$description, sep=""))
+  
+  message(paste("***: ", loginResponse$content$description, sep=""))
   
   # write configuration file
-  if(jsonlite::fromJSON(loginResponse$content)$result==1){
+  if(loginResponse$content$result==1){
     # get the path to the config file
     configDir   <- authConfigDir(username)
     configFile  <- file.path(configDir , "config.dcf")
@@ -36,7 +37,7 @@ loginAccount <- function(username, token) {
   invisible(loginResponse)
 }
 
-logoutAccount <- function(username) {
+logout <- function(username) {
 
   if (!isStringParam(username))
     stop(stringParamErrorMessage("username"))
@@ -62,7 +63,7 @@ logoutAccount <- function(username) {
   # log out
   headers    <- list('Cookie'=configAuthInfo$session)
   logoutResponse  <- client$authLogout(headers)
-  message(paste("***: ", jsonlite::fromJSON(logoutResponse$content)$description, sep=""))
+  message(paste("***: ", logoutResponse$content$description, sep=""))
   
   invisible(logoutResponse)
 }

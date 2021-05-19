@@ -1,5 +1,4 @@
 import(renv)
-import(RCurl)
 import(jsonlite)
 import(zip)
 import(httr)

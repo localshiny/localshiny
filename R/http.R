@@ -22,12 +22,7 @@ httpGetRCurl <- function( protocol,
   f <- httr::GET(url)
   bin <- httr::content(f, "raw")
   writeBin(bin, outFile)
-
-  # download files
-  #f = RCurl::CFILE(outFile, mode="wb")
-  #RCurl::curlPerform(url=url, writedata = f@ref)
-  #RCurl::close(f)   
-  
+   
   normalizePath(outFile)
 
 }

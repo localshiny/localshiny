@@ -41,10 +41,6 @@ deployDoc <- function(username,
                       description = NULL,
                       os   = NULL){
   
-  oldWD <- getwd()
-  on.exit(setwd(oldWD), add = TRUE)
-  setwd(dirname(document)) 
-  
   appdir <- tempfile(pattern="localshiny")
   dir.create(appdir)
   on.exit(unlink(appdir, recursive=TRUE))
@@ -63,7 +59,7 @@ deployDoc <- function(username,
   },error = function(e, ...) {
         stop(e)
     })
-
+  
 }
 
 
@@ -111,6 +107,7 @@ deployDir <- function(username,
   appInfo    <- infoAppDeploy(project, script, name, description, version, os)
   
   # upload app .tar file
+  message("uploading the R Shiny application files ...\n")
   headers   <- list('Cookie'=configAuthInfo$session)
   uploadRequest  <- client$uploadApp(appInfo, appFile, headers)
   message(paste("***: ", uploadRequest$content$description, sep=""))
@@ -124,7 +121,7 @@ lockAppDeploy <- function(appDir){
   oldWD <- getwd()
   on.exit(setwd(oldWD), add = TRUE)
   setwd(appDir)  
-  
+  message("extracting environment settings of the project...\n")
   #capture the state of a project's R package dependencies and create a lockfile, "renv.lock".
   #The lockfile can be used to later restore these project's dependencies as required.
   renv::settings$package.dependency.fields(c("Imports", "Depends", "LinkingTo", "Suggests"))
@@ -141,6 +138,7 @@ lockAppDeploy <- function(appDir){
   }
 
   # archive all files under the current directory
+  message("compressing the R Shiny application files ...\n")
   appZipFile <- paste(basename(appDir), "zip", sep=".")
   zip::zipr(appZipFile, ".")
   

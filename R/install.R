@@ -96,7 +96,7 @@ dirAppInstall  <- function(appPath, appID){
 
 infoAppInstall <- function(appID, client){
   
-  message("getting app infomation ...")
+  message("getting app infomation ...\n")
   # get the file containing app information
   infoFile <-client$infoApp(appID)
   on.exit(unlink(infoFile))
@@ -121,7 +121,7 @@ fileAppInstall <- function(appID, client){
   ## download app installation files.
   zipFile <-client$downloadApp(appID)
 
-  message(paste("saved as", zipFile, ".", sep=""))
+  message(paste("saved as '", zipFile, "'. \n", sep=""))
   message("Done! \n")
   zipFile
 }

@@ -2,7 +2,7 @@ Package: localshiny
 Version: 1.0
 Date: 2021-03-01
 Title: Deployment tool of distributing Shiny apps on LocalShiny web.
-Author: 
+Author: Nating Wang <natwang17@gmail.com>
 Maintainer: Chenguang Wang <chenguang.wang.0517@gmail.com>
 Depends: R (>= 3.6.3)
 Imports: renv, jsonlite, zip, httr

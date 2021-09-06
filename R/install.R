@@ -33,24 +33,28 @@ installAppLock <- function(zipFile){
   tryCatch(zip::unzip(zipFile, files = NULL, overwrite = TRUE, junkpaths =TRUE, exdir = "."),
     error=function(e){ print(e) } )
   
+  lockfile <- getOption("lockfile")
   ## install dependencies wirten in the 'renv.lock' files
-  if(!file.exists("renv.lock")){
+  if(!file.exists(lockfile)){
     stop("***: Lockfile 'renv.lock' does not exist. Need the lockfile to deplpy dependence packages!")
   }
   
-  tryCatch(renv::restore(lockfile = getOption("lockfile"), prompt = FALSE),
+  pkgLockfile  <- names(jsonlite::fromJSON(lockfile)$Packages)
+  if("V8" %in% pkgLockfile){ Sys.setenv(DOWNLOAD_STATIC_LIBV8=1) }
+  
+  tryCatch(renv::restore(lockfile = lockfile, prompt = FALSE),
     error=function(e){ print(e) } )
   
   ## check omitted packages and reinstall them
-  statusApp <- statusAppInstall(getOption("lockfile"))
+  statusApp <- statusAppInstall(lockfile)
   reLoop    <- 1
 
-  if(!statusApp && reLoop <=3){
+  if(!statusApp && reLoop <=2){
 
-    tryCatch(renv::restore(lockfile = getOption("lockfile"), prompt = FALSE),
-      error=function(e){ print(e) } )
-      
-    statusApp <- statusAppInstall(getOption("lockfile"))
+    tryCatch(renv::restore(lockfile = lockfile, prompt = FALSE),
+      error=function(e){ print(e)  } )
+    
+    statusApp <- statusAppInstall(lockfile)
     reLoop <- reLoop+1
   }
   

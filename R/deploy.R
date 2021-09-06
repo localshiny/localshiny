@@ -47,7 +47,7 @@ deployDoc <- function(username,
   file.copy(document, appdir)  ## failed
   
   name <- if(!is.null(name)) name else gsub(".R", "", basename(document))
-
+  
   tryCatch({
     deployDir(username,
             appdir,
@@ -124,6 +124,7 @@ lockAppDeploy <- function(appDir){
   message("extracting environment settings of the project...\n")
   #capture the state of a project's R package dependencies and create a lockfile, "renv.lock".
   #The lockfile can be used to later restore these project's dependencies as required.
+  
   renv::settings$package.dependency.fields(c("Imports", "Depends", "LinkingTo", "Suggests"))
   renv::snapshot(project = ".", prompt = FALSE)
   
@@ -131,7 +132,7 @@ lockAppDeploy <- function(appDir){
   if(dir.exists("renv")){
     unlink("renv", recursive=TRUE)
   }  
-
+  
   # check snapshot results
   if(!file.exists("renv.lock")){
     stop("This project has not yet been snapshotted. Lockfile does not exist!")

@@ -3,6 +3,7 @@ setServer <- function() {
                    "://", 
                    getOption("server"), 
                    getOption("path"), sep="")
+                   
   info   <- list(name = getOption("server"), url = url)
 
   info

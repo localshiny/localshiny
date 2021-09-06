@@ -18,11 +18,11 @@ httpGetRCurl <- function( protocol,
   #  eMsg <- paste("URL '", url, "' does not exist \n")
   #  stop(eMsg)
   #}
-  
+
   f <- httr::GET(url)
   bin <- httr::content(f, "raw")
   writeBin(bin, outFile)
-   
+  
   normalizePath(outFile)
 
 }

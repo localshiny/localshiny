@@ -1,4 +1,3 @@
-readme
 # localshiny
 The R package localshiny is a deployment interface for LocalShiny web and LocalShiny app. LocalShiny web is an online service for hosting Shiny apps in the cloud. Developers, who want to share Shiny web applications built in R, use the R package localshiny to create the clones of their applications and then deploy them on the hosted service. LocalShiny app is designed to reproduce Shiny web apps on local computer machines by invoking the function for installation defined in the localshiny package.
 

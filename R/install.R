@@ -1,7 +1,7 @@
 ## ------------------------------------------------------------------
 ##    INSTALL
 ## ------------------------------------------------------------------
-installApp <- function(appID, appPath=getwd()){
+installApp <- function(appID, appPath=getwd(),localPath=""){
   
   if (!isStringParam(appID))
     stop(stringParamErrorMessage("appID"))   
@@ -20,7 +20,15 @@ installApp <- function(appID, appPath=getwd()){
   appInfoList <- infoAppInstall(appID, client)
   
   #step2: download zip file 
-  appZipFile  <- fileAppInstall(appID, client)
+  if (localPath!="")
+  {
+      appZipFile <- localPath
+  }
+  else
+  {
+      appZipFile  <- fileAppInstall(appID, client)
+  }
+
   
   #step3: install application
   installAppLock(appZipFile)

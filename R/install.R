@@ -6,30 +6,31 @@ installApp <- function(appID, appPath=getwd(),localPath=""){
   if (!isStringParam(appID))
     stop(stringParamErrorMessage("appID"))   
 
+
   # set the directory
   appDir  <- dirAppInstall(appPath, appID)
   oldWD   <- getwd()
   on.exit(setwd(oldWD), add = TRUE)
-  setwd(appDir)   
-
-  # create connect client
-  serverInfo  <- setServer()     
-  client      <- connectClient(serverInfo$url)  
+  setwd(appDir) 
   
-  #step1:  get APP information
-  appInfoList <- infoAppInstall(appID, client)
-  
-  #step2: download zip file 
   if (localPath!="")
   {
       appZipFile <- localPath
   }
   else
   {
-      appZipFile  <- fileAppInstall(appID, client)
+  
+    # create connect client
+    serverInfo  <- setServer()     
+    client      <- connectClient(serverInfo$url)  
+    
+    #step1:  get APP information
+    appInfoList <- infoAppInstall(appID, client)
+    
+    #step2:  download zip file 
+    appZipFile  <- fileAppInstall(appID, client)
   }
 
-  
   #step3: install application
   installAppLock(appZipFile)
 

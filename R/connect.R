@@ -9,13 +9,21 @@ connectClient <- function(service){
            headers = headers)
           
     },
-
+    
     authLogout = function(headers){
       POST(service, 
            "logout", 
            headers = headers)
     },
-
+    
+    getXml = function(appInfo,headers){
+      POST(service,
+           "package/gen-xml",
+           headers=headers,
+           content     = toJSON(as.data.frame(appInfo)), 
+           contentType = "multipart/form-data")
+    },
+    
     uploadApp = function(appInfo, appZipFile, headers){   
       POST( service, 
             "upload", 

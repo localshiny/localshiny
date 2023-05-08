@@ -40,7 +40,6 @@ httpPostRCurl <- function(protocol,
                      contentType = NULL) {
                        
   # HTTP transport using the curl command-line utility. Useful on systems that have a working curl
-  
   if (!is.null(content) && is.null(contentType))
     stop("You must specify a contentType for the specified content")
   
@@ -52,14 +51,24 @@ httpPostRCurl <- function(protocol,
   url <- paste(protocol, "://", host, port, urlPath, sep="")
 
   # make the request
+
   time <- system.time(gcFirst = FALSE, tryCatch({
     if (!is.null(contentFile)) {
       # upload .zip file
-      resp <- httr::POST(url, add_headers(.headers = c('Cookie'=headers$Cookie, 'Content-Type'=contentType)), 
-                              body=list('info'=content, 'file'=upload_file(contentFile)))
-    } else{
-      # log in or log out
+      resp <- httr::POST(url, httr::add_headers(.headers = paste( "Content-Type",contentType,sep="=")),set_cookies(.cookies=headers$Cookie), 
+                              body=list("info"=content, "file"=upload_file(contentFile)))
+    } 
+    # getXml
+    else if(!is.null(content)){
+      resp <- httr::POST(url, httr::add_headers(.headers = paste( "Content-Type",contentType,sep="=")), 
+                         body=list("info"=content))
+    }
+    # log in or log out
+    else if (urlPath=='/api/login'){
       resp <- httr::POST(url, httr::add_headers(.headers = unlist(headers)))
+    }
+    else if (urlPath=='/api/logout'){
+      resp <- httr::POST(url, httr::set_cookies(.cookies =headers$Cookie))
     }
   },
     error = function(e, ...) {
@@ -93,7 +102,9 @@ readHttpResponse <- function(req, headers, bodies) {
         status  = status,
         session = sessionCode,
         content = bodies,
-        contentType = contentType) 
+        contentType = contentType,
+        headers=headers,
+        bodies=bodies) 
 }
 
 parseHttpStatus <- function(headers){

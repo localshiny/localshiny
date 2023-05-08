@@ -3,11 +3,11 @@
 ## ------------------------------------------------------------------
 deployApp <- function(username,
                       project = getwd(),
+                      upload =TRUE,
                       version = NULL,
                       name = NULL,
                       description = NULL,
                       os   = NULL) {
-  
   if (!isStringParam(username))
     stop(stringParamErrorMessage("username"))  
   
@@ -17,13 +17,16 @@ deployApp <- function(username,
   if(isDocumentPath(project)){
     deployDoc(username, 
               project, 
+              upload =upload,
               version = version, 
               name = name, 
               description=description, 
               os=os )
   }else{
-    deployDir(username, 
+    deployDir(username,
+              project,
               project, 
+              upload =upload,
               version = version, 
               name = name, 
               description=description, 
@@ -36,6 +39,7 @@ deployApp <- function(username,
 
 deployDoc <- function(username, 
                       document, 
+                      upload=TRUE,
                       version = NULL,
                       name = NULL,
                       description = NULL,
@@ -51,6 +55,8 @@ deployDoc <- function(username,
   tryCatch({
     deployDir(username,
             appdir,
+            document,
+            upload=upload,
             version = version, 
             name = name, 
             description=description, 
@@ -65,14 +71,23 @@ deployDoc <- function(username,
 
 deployDir <- function(username,
                       appdir,
+                      project,
+                      upload=TRUE,
                       version = NULL,
                       name = NULL,
                       description = NULL,
                       os   = NULL,
                       script = getOption("runShiny")){
-  
+  if(isDocumentPath(project)){
+    projectDir=dirname(project)
+  }
+  else
+  {
+    projectDir=project
+  }
   # normalize project path and ensure it contains files
-  project <- normalizePath(appdir, mustWork = FALSE)
+  appdir <- normalizePath(appdir,winslash ="/", mustWork = FALSE)
+  projectDir <- normalizePath(projectDir,winslash = "/", mustWork = FALSE)
   if (!file.exists(appdir)) {
     stop(appdir, "contains no files")
   }   
@@ -92,27 +107,64 @@ deployDir <- function(username,
   serverInfo <- setServer()     
   client     <- connectClient(serverInfo$url)
   
+  assignBrowseURL=c("library('utils');","assignInNamespace('browseURL',browseURL,ns='utils');")
+  browseCmd="browseURL<-function (url,broser=getOption('browser'),encodeIfNeeded=FALSE){}"
+  dirRunCmd=c(assignBrowseURL,"library(shiny);","runApp();",browseCmd)
+  docRunCmd=c(assignBrowseURL,browseCmd)
+  
   # if we snapshot a shiny application, write a script to run it
   if(identical(script, getOption("runShiny"))){
     script <- file.path(".", getOption("runShiny"))
-    writeLines("library(shiny);runApp()", script)
-    on.exit(unlink(script))
+    writeLines(dirRunCmd, paste(appdir,script,sep=''))
+
   }
-  
+  else{
+    appfile=list.files(project,pattern="*.R",full.names = T)
+    script <- file.path(paste(appdir,basename(project),sep="/"))
+    docRunCmd=c(docRunCmd,readLines(script))
+    writeLines(docRunCmd, script)
+  }
+
   # zip up the project 
   appFile <- lockAppDeploy(appdir)
-  on.exit(unlink(appFile))
+  if(projectDir!=appdir)
+  {
+      file.copy(paste(appdir,"renv.lock",sep='/'),paste(projectDir,"renv.lock",sep='/'))
+  }
+  #on.exit(unlink(appFile))
+  
   
   # get app information
-  appInfo    <- infoAppDeploy(project, script, name, description, version, os)
+  
   
   # upload app .tar file
   message("uploading the R Shiny application files ...\n")
   headers   <- list('Cookie'=configAuthInfo$session)
-  uploadRequest  <- client$uploadApp(appInfo, appFile, headers)
-  message(paste("***: ", uploadRequest$content$description, sep=""))
-  
-  invisible(uploadRequest)
+  if (upload==TRUE)
+  {
+    appInfo    <- infoAppDeploy(project, script, name, description, version, os)
+    uploadRequest  <- client$uploadApp(appInfo, appFile, headers)
+    message(paste("***: ", uploadRequest$content$description, sep=""))
+    invisible(uploadRequest)
+  }
+  else{
+    appInfo    <- infoXmlDeploy(appdir, script,username, name, description, version, os)
+    getXmlRequest  <- client$getXml(appInfo,headers)
+    message(paste("***: ", getXmlRequest$headers$'content-disposition', sep=""))
+    invisible(getXmlRequest)
+    unlink(paste(paste(appdir,basename(project),sep='/'),'.zip',sep=''))
+    appID <- strsplit(getXmlRequest$headers$'content-disposition','filename=')[[1]][2]
+    xmlFile=paste(appdir,appID,sep="/")
+    xml2::write_xml(getXmlRequest$bodies,file=xmlFile)
+    zipFile=paste(paste(projectDir,strsplit(appID,'.xml')[[1]][1],sep='/'),".zip",sep = "")
+    
+    rFileList=list.files(appdir,pattern="*.R",full.names = T)
+    lockFileList=list.files(appdir,pattern="*.lock",full.names = T)
+    fileList=c(rFileList,lockFileList,xmlFile)
+    zipr(zipfile = zipFile,files =fileList,root=projectDir)
+    unlink(xmlFile)
+  }
+  unlink(paste(project,"renv.lock",sep="/"))
   
 }
 
@@ -125,7 +177,7 @@ lockAppDeploy <- function(appDir){
   #capture the state of a project's R package dependencies and create a lockfile, "renv.lock".
   #The lockfile can be used to later restore these project's dependencies as required.
   
-  renv::settings$package.dependency.fields(c("Imports", "Depends", "LinkingTo", "Suggests"))
+  renv::settings$package.dependency.fields(c("Imports", "Depends", "LinkingTo"))
   renv::snapshot(project = ".", prompt = FALSE)
   
   # remove renv setting file
@@ -137,7 +189,7 @@ lockAppDeploy <- function(appDir){
   if(!file.exists("renv.lock")){
     stop("This project has not yet been snapshotted. Lockfile does not exist!")
   }
-
+  
   # archive all files under the current directory
   message("compressing the R Shiny application files ...\n")
   appZipFile <- paste(basename(appDir), "zip", sep=".")
@@ -161,5 +213,17 @@ infoAppDeploy <- function(appDir, appRunScript, appName = NULL, appDesc=NULL, ap
         pakdesc = pakdesc, 
         os      = os,
         rversion = rversion,
-        runcmd  = appRunScript )
+        runcmd  = basename(appRunScript) )
 }
+
+infoXmlDeploy <- function(appDir, appRunScript,authorname,appName = NULL, appDesc=NULL, appVersion=NULL, appOs = NULL){
+  info=infoAppDeploy(appDir, appRunScript, appName, appDesc, appVersion, appOs)
+  list( pakname = info[1],
+        authorname=authorname,
+        version = info[2], 
+        pakdesc = info[3], 
+        os      = info[4],
+        rversion = info[5],
+        runcmd  = info[6] )
+}
+

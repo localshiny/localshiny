@@ -19,6 +19,7 @@ login <- function(username, token) {
   
   # write configuration file
   if(loginResponse$content$result==1){
+    browser()
     # get the path to the config file
     configDir   <- authConfigDir(username)
     configFile  <- file.path(configDir , "config.dcf")
@@ -62,6 +63,7 @@ logout <- function(username) {
   
   # log out
   headers    <- list('Cookie'=configAuthInfo$session)
+  configAuthInfo$session
   logoutResponse  <- client$authLogout(headers)
   message(paste("***: ", logoutResponse$content$description, sep=""))
   
